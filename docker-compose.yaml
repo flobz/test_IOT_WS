@@ -1,0 +1,97 @@
+version: '3.7'
+services:    
+ rabbitmq1:
+   image: "rabbitmq:3-management"
+   hostname: "rabbitmq1"
+   environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+   ports:
+    - "15672:15672"
+    - "5672:5672"
+   labels:      
+     NAME: "rabbitmq1"
+   volumes:
+     - /etc/localtime:/etc/localtime:ro
+ nifi:
+    image: apache/nifi:latest
+    ports:
+      - 8082:8080
+    environment:
+      - NIFI_WEB_HTTP_PORT=8080
+    volumes:
+      - ./nifi/conf:/opt/conf
+      - ./nifi/state:/data/nifi/state
+      -  /etc/localtime:/etc/localtime:ro
+ mongo:
+    image: mongo:4.2.0-bionic
+    hostname: "mongo"
+    restart: always
+    labels:
+      NAME: "mongo"
+    ports:
+     - 27017:27017
+    volumes:
+     -  ./mongo-data:/data/db
+ mongo-express:
+    image: mongo-express
+    hostname: "mongo_express"
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+    labels:
+      NAME: "mongo_express"
+ ftp: 
+    image: "fauria/vsftpd"
+    environment:
+      FTP_USER: "user"
+      FTP_PASS: "password"
+      LOG_STDOUT: "YES"
+    ports:
+       - "21:21"
+       - "20:20"
+       - "21100-21110:21100-21110" 
+    volumes:
+       - ./ftp:/home/vsftpd
+    privileged: true
+ grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=MYPASSWORT
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=myrul.com
+    ports:
+     -  3000:3000
+ influxdb:
+   image: "influxdb:1.8"
+   ports:
+     - 8086:8086
+   environment:
+     INFLUXDB_DB: "sensor"
+     INFLUXDB_USER: "user"
+     INFLUXDB_USER_PASSWORD: "user"
+     INFLUXDB_ADMIN_ENABLED: "true"
+     INFLUXDB_ADMIN_USER: "admin"
+     INFLUXDB_ADMIN_PASSWORD: "admin"
+     INFLUXDB_HTTP_AUTH_ENABLED: "true"
+ gen1:
+     build:
+        dockerfile: gen_data.Dockerfile
+        context: ./
+     volumes:
+        - ./injection.py:/injection.py
+     command: python3 -u injection.py
+ api:
+     build: 
+       dockerfile: Dockerfile
+       context: out/python-ts-iot
+     image: "myapi"
+     ports:
+       - "8080:8080"

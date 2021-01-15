@@ -1,0 +1,84 @@
+openapi: 3.0.0
+info:
+  description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/)
+    or HTML.
+  title: TimeSeries API IoT
+  version: "0.42"
+servers:
+- description: Optional server description, e.g. Internal staging server for testing
+  url: http://localhost:8080/v1
+- description: Optional server description, e.g. Main (production) server
+  url: http://api.example.com/v1
+paths:
+  /mean/{sensorId}:
+    get:
+      operationId: mean_sensor_id_get
+      parameters:
+      - description: String Id of the sensor to get
+        explode: false
+        in: path
+        name: sensorId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Integer/timestamp of the start date
+        explode: true
+        in: query
+        name: startDate
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: Integer/timestamp of the end date
+        explode: true
+        in: query
+        name: endDate
+        required: false
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                type: array
+          description: A JSON array of the mean of values between start and end dates
+      summary: Calculer la moyenne d'un capteur entre deux dates
+      x-openapi-router-controller: TimeSeriesIoT.controllers.default_controller
+  /value/{sensorId}:
+    get:
+      operationId: value_sensor_id_get
+      parameters:
+      - description: String Id of the sensor to get
+        explode: false
+        in: path
+        name: sensorId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+          description: A JSON key val
+      summary: Récupérer la dernière valeur d'un capteur
+      x-openapi-router-controller: TimeSeriesIoT.controllers.default_controller
+components:
+  schemas:
+    inline_response_200:
+      example:
+        date: ""
+        value: ""
+      properties:
+        date:
+          type: date
+        value:
+          description: sensor value
+          type: float
