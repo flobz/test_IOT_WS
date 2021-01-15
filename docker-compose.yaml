@@ -22,8 +22,8 @@ services:
     environment:
       - NIFI_WEB_HTTP_PORT=8080
     volumes:
-      - ./nifi/conf:/opt/conf
-      - ./nifi/state:/data/nifi/state
+      - ./nifi/nifi-current/conf:/opt/conf
+      - ./nifi/nifi-current/state:/data/nifi/state
       -  /etc/localtime:/etc/localtime:ro
  mongo:
     image: mongo:4.2.0-bionic
